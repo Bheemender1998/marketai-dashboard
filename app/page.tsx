@@ -7,6 +7,7 @@ import { PerfPanel } from "@/components/PerfPanel";
 import { OpenPositions } from "@/components/OpenPositions";
 import { RejectionBreakdown } from "@/components/RejectionBreakdown";
 import { FalsificationGates } from "@/components/FalsificationGates";
+import { BrierBreakdown } from "@/components/BrierBreakdown";
 import { SystemStatus } from "@/components/SystemStatus";
 import { Roadmap } from "@/components/Roadmap";
 import type { PaperStats, PostmortemStats, Rejections, TradingStatus } from "@/lib/types";
@@ -46,6 +47,7 @@ export default function DashboardPage() {
         <RejectionBreakdown rejections={rejections} loading={loading} />
       </div>
       <FalsificationGates paper={paper} postmortem={postmortem} loading={loading} />
+      <BrierBreakdown postmortem={postmortem} paper={paper} loading={loading} />
       <SystemStatus />
       <Roadmap />
     </main>

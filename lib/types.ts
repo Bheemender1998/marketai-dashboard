@@ -28,13 +28,22 @@ export interface PaperStats {
   recentTrades: RecentTrade[];
 }
 
+export interface SourceBucket {
+  total: number;
+  wins: number;
+  pnl: number;
+}
+
 export interface PostmortemStats {
   totalResolved: number;
   wins: number;
   losses: number;
   expired: number;
   totalPnl: number;
-  bySource: Record<string, { total: number; wins: number; pnl: number }>;
+  brierSum: number;
+  bySource: Record<string, SourceBucket>;
+  byAssetClass: Record<string, SourceBucket>;
+  byTimeframe: Record<string, SourceBucket>;
   winRate: number;
   avgBrier: number;
   pendingCount: number;

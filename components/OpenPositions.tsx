@@ -15,7 +15,7 @@ function LoadingRows() {
     <>
       {[0, 1, 2].map((i) => (
         <TableRow key={i}>
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((j) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((j) => (
             <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
           ))}
         </TableRow>
@@ -51,6 +51,7 @@ export function OpenPositions({
                 <TableHead className="text-xs text-right">Qty</TableHead>
                 <TableHead className="text-xs text-right">Entry</TableHead>
                 <TableHead className="text-xs text-right">Current</TableHead>
+                <TableHead className="text-xs text-right">Mkt Val</TableHead>
                 <TableHead className="text-xs text-right">Stop</TableHead>
                 <TableHead className="text-xs text-right">Target</TableHead>
                 <TableHead className="text-xs text-right">U-P&amp;L</TableHead>
@@ -61,7 +62,7 @@ export function OpenPositions({
                 <LoadingRows />
               ) : !positions?.length ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-6">
+                  <TableCell colSpan={9} className="text-center text-sm text-muted-foreground py-6">
                     No open positions
                   </TableCell>
                 </TableRow>
@@ -83,6 +84,9 @@ export function OpenPositions({
                       <TableCell className="text-right font-mono text-sm">${p.entryPrice.toFixed(2)}</TableCell>
                       <TableCell className="text-right font-mono text-sm">
                         {p.currentPrice !== null ? `$${p.currentPrice.toFixed(2)}` : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                        {p.marketValue !== null ? `$${p.marketValue.toFixed(2)}` : "—"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm text-red-400">
                         ${p.stop.toFixed(2)}

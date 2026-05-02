@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { OpenPosition } from "@/lib/types";
+import type { EnrichedPosition } from "@/lib/types";
 
 function pct(entry: number, target: number) {
   return (((target - entry) / entry) * 100).toFixed(1);
@@ -15,7 +15,7 @@ function LoadingRows() {
     <>
       {[0, 1, 2].map((i) => (
         <TableRow key={i}>
-          {[0, 1, 2, 3, 4].map((j) => (
+          {[0, 1, 2, 3, 4, 5, 6].map((j) => (
             <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
           ))}
         </TableRow>
@@ -28,7 +28,7 @@ export function OpenPositions({
   positions,
   loading,
 }: {
-  positions: OpenPosition[] | undefined;
+  positions: EnrichedPosition[] | undefined;
   loading: boolean;
 }) {
   return (
@@ -42,57 +42,62 @@ export function OpenPositions({
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs">Ticker</TableHead>
-              <TableHead className="text-xs">Side</TableHead>
-              <TableHead className="text-xs text-right">Entry</TableHead>
-              <TableHead className="text-xs text-right">Stop</TableHead>
-              <TableHead className="text-xs text-right">Target</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <LoadingRows />
-            ) : !positions?.length ? (
+        <div className="max-h-[480px] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-6">
-                  No open positions
-                </TableCell>
+                <TableHead className="text-xs">Ticker</TableHead>
+                <TableHead className="text-xs">Side</TableHead>
+                <TableHead className="text-xs text-right">Entry</TableHead>
+                <TableHead className="text-xs text-right">Current</TableHead>
+                <TableHead className="text-xs text-right">Stop</TableHead>
+                <TableHead className="text-xs text-right">Target</TableHead>
+                <TableHead className="text-xs text-right">U-P&amp;L</TableHead>
               </TableRow>
-            ) : (
-              positions.slice(0, 8).map((p) => (
-                <TableRow key={p.ticker}>
-                  <TableCell className="font-mono text-sm font-medium">{p.ticker}</TableCell>
-                  <TableCell>
-                    <Badge variant={p.direction === "LONG" ? "default" : "destructive"} className="text-xs">
-                      {p.direction}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm">${p.entryPrice.toFixed(2)}</TableCell>
-                  <TableCell className="text-right font-mono text-sm text-red-400">
-                    ${p.stop.toFixed(2)}
-                    <span className="text-xs text-muted-foreground ml-1">
-                      ({pct(p.entryPrice, p.stop)}%)
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-mono text-sm text-emerald-400">
-                    ${p.target.toFixed(2)}
-                    <span className="text-xs text-muted-foreground ml-1">
-                      (+{pct(p.entryPrice, p.target)}%)
-                    </span>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <LoadingRows />
+              ) : !positions?.length ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">
+                    No open positions
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        {(positions?.length ?? 0) > 8 && (
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            +{(positions?.length ?? 0) - 8} more positions
-          </p>
-        )}
+              ) : (
+                positions.map((p) => {
+                  const upnl = p.unrealizedPnl ?? 0;
+                  const upnlColor = upnl >= 0 ? "text-emerald-400" : "text-red-400";
+                  return (
+                    <TableRow key={p.ticker}>
+                      <TableCell className="font-mono text-sm font-medium">{p.ticker}</TableCell>
+                      <TableCell>
+                        <Badge variant={p.direction === "LONG" ? "default" : "destructive"} className="text-xs">
+                          {p.direction}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm">${p.entryPrice.toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-mono text-sm">
+                        {p.currentPrice !== null ? `$${p.currentPrice.toFixed(2)}` : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm text-red-400">
+                        ${p.stop.toFixed(2)}
+                        <span className="text-xs text-muted-foreground ml-1">({pct(p.entryPrice, p.stop)}%)</span>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm text-emerald-400">
+                        ${p.target.toFixed(2)}
+                        <span className="text-xs text-muted-foreground ml-1">(+{pct(p.entryPrice, p.target)}%)</span>
+                      </TableCell>
+                      <TableCell className={`text-right font-mono text-sm ${upnlColor}`}>
+                        {p.unrealizedPnl !== null ? `${upnl >= 0 ? "+" : ""}$${upnl.toFixed(2)}` : "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

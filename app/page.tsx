@@ -10,7 +10,12 @@ import { FalsificationGates } from "@/components/FalsificationGates";
 import { BrierBreakdown } from "@/components/BrierBreakdown";
 import { SystemStatus } from "@/components/SystemStatus";
 import { Roadmap } from "@/components/Roadmap";
-import type { PaperStats, PostmortemStats, Rejections, TradingStatus } from "@/lib/types";
+import { LiveMetricsPanel } from "@/components/LiveMetricsPanel";
+import { PFOnlyPanel } from "@/components/PFOnlyPanel";
+import type {
+  PaperStats, PostmortemStats, Rejections, TradingStatus,
+  EnrichedPositionsResponse, PaperMetrics,
+} from "@/lib/types";
 
 const BASE = "https://marketai-backend-production-1493.up.railway.app";
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -31,8 +36,16 @@ export default function DashboardPage() {
   const { data: trading, isLoading: tradingLoading } =
     useSWR<TradingStatus>(`${BASE}/api/trading/status`, fetcher, { refreshInterval: REFRESH });
 
+  const { data: enriched, isLoading: enrichedLoading } =
+    useSWR<EnrichedPositionsResponse>(`${BASE}/api/paper/positions-enriched`, fetcher, { refreshInterval: REFRESH });
+
+  const { data: metrics, isLoading: metricsLoading } =
+    useSWR<PaperMetrics>(`${BASE}/api/paper/metrics`, fetcher, { refreshInterval: REFRESH });
+
   const isOnline = !paperErr && paper !== undefined;
-  const loading = paperLoading || pmLoading || rejLoading || tradingLoading;
+  const loading =
+    paperLoading || pmLoading || rejLoading || tradingLoading ||
+    enrichedLoading || metricsLoading;
 
   useEffect(() => {
     if (paper) setLastUpdated(new Date());
@@ -42,8 +55,10 @@ export default function DashboardPage() {
     <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
       <Header isOnline={isOnline} lastUpdated={lastUpdated} />
       <PerfPanel paper={paper} trading={trading} loading={loading} />
+      <LiveMetricsPanel metrics={metrics} loading={metricsLoading} />
+      <PFOnlyPanel positions={enriched?.positions} metrics={metrics} loading={loading} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <OpenPositions positions={paper?.openPositions} loading={loading} />
+        <OpenPositions positions={enriched?.positions} loading={enrichedLoading} />
         <RejectionBreakdown rejections={rejections} loading={loading} />
       </div>
       <FalsificationGates paper={paper} postmortem={postmortem} loading={loading} />

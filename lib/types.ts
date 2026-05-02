@@ -65,3 +65,38 @@ export interface TradingStatus {
   tradingEnabled: boolean;
   dryRun: boolean;
 }
+
+export interface EnrichedPosition extends OpenPosition {
+  currentPrice: number | null;
+  qty: number | null;
+  marketValue: number | null;
+  unrealizedPnl: number | null;
+  source: string | null;
+  pfStrategy: string | null;
+}
+
+export interface MetricsBucket {
+  ann: number;
+  sharpe: number;
+  maxDD: number;
+  tradeCount: number;
+  totalPnl: number;
+  dayCount: number;
+}
+
+export interface PaperMetrics {
+  all: MetricsBucket;
+  patternfinding: MetricsBucket;
+  backtest: {
+    ann: number;
+    sharpe: number;
+    maxDD: number;
+    events: number;
+    live: number;
+    target: number;
+  };
+}
+
+export interface EnrichedPositionsResponse {
+  positions: EnrichedPosition[];
+}

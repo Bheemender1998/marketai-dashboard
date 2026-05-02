@@ -15,7 +15,7 @@ function LoadingRows() {
     <>
       {[0, 1, 2].map((i) => (
         <TableRow key={i}>
-          {[0, 1, 2, 3, 4, 5, 6].map((j) => (
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((j) => (
             <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
           ))}
         </TableRow>
@@ -48,6 +48,7 @@ export function OpenPositions({
               <TableRow>
                 <TableHead className="text-xs">Ticker</TableHead>
                 <TableHead className="text-xs">Side</TableHead>
+                <TableHead className="text-xs text-right">Qty</TableHead>
                 <TableHead className="text-xs text-right">Entry</TableHead>
                 <TableHead className="text-xs text-right">Current</TableHead>
                 <TableHead className="text-xs text-right">Stop</TableHead>
@@ -60,7 +61,7 @@ export function OpenPositions({
                 <LoadingRows />
               ) : !positions?.length ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">
+                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-6">
                     No open positions
                   </TableCell>
                 </TableRow>
@@ -75,6 +76,9 @@ export function OpenPositions({
                         <Badge variant={p.direction === "LONG" ? "default" : "destructive"} className="text-xs">
                           {p.direction}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                        {p.qty !== null ? p.qty.toFixed(p.qty < 1 ? 4 : 2) : "—"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">${p.entryPrice.toFixed(2)}</TableCell>
                       <TableCell className="text-right font-mono text-sm">

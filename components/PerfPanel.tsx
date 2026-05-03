@@ -52,31 +52,53 @@ export function PerfPanel({
   trading: TradingStatus | undefined;
   loading: boolean;
 }) {
-  const pnl = paper?.totalPnl ?? 0;
-  const wr = parseFloat(paper?.winRate ?? "0");
+  const pf = paper?.bySource?.patternfinding;
+  const legacy = paper?.bySource?.legacy_pre_pf;
+  // Prefer PF bucket; fall back to legacy bucket; last resort: aggregate paper.
+  const primaryWR = pf
+    ? parseFloat(pf.winRate.replace("%", "")) || 0
+    : parseFloat(paper?.winRate ?? "0");
+  const primaryPnl = pf?.totalPnl ?? paper?.totalPnl ?? 0;
+  const primaryTrades = pf?.totalTrades ?? paper?.totalTrades ?? 0;
+  const primaryWins = pf?.wins ?? paper?.wins ?? 0;
+  const primaryLosses = pf?.losses ?? paper?.losses ?? 0;
+  const primaryLabel = pf ? "PF Paper WR" : "Paper WR (legacy)";
+  const primaryPnlLabel = pf ? "PF Paper PnL" : "Paper PnL (legacy)";
+  const legacySub = legacy
+    ? `legacy: ${legacy.totalTrades} fills @ ${legacy.winRate}`
+    : "";
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <MetricCard
-        label="Paper WR (legacy)"
-        value={loading ? "—" : paper?.winRate ?? "—"}
-        sub={loading ? "" : `${paper?.totalTrades ?? 0} trades · ${paper?.wins ?? 0}W/${paper?.losses ?? 0}L`}
-        color={wr >= 60 ? "green" : wr >= 50 ? "yellow" : "red"}
+        label={primaryLabel}
+        value={loading ? "—" : `${Math.round(primaryWR)}%`}
+        sub={
+          loading
+            ? ""
+            : `${primaryTrades} trades · ${primaryWins}W/${primaryLosses}L${legacySub ? " · " + legacySub : ""}`
+        }
+        color={primaryWR >= 60 ? "green" : primaryWR >= 50 ? "yellow" : "red"}
         loading={loading}
         tooltip={
-          "Win rate across ALL paper fills on Alpaca (mixed-source: BTC scalp, picks, GLD era — pre-PF). " +
-          "EXCLUDED from Kraken go-live gate by doctrine 2026-05-02 — those source pipelines are killed/dormant. " +
-          "Source-tagged PF-only WR will replace this metric in PR 2."
+          pf
+            ? "PatternFinding-only paper-fill win rate — counts toward the Kraken go-live gate (T21: ≥60% WR over ≥30 PF closes). " +
+              "Pre-PF mixed-source fills are bucketed separately as legacy_pre_pf and excluded by doctrine 2026-05-02."
+            : "Win rate across all paper fills on Alpaca. Pre-PF mixed-source mix (BTC scalp, picks, GLD era). " +
+              "EXCLUDED from Kraken go-live gate by doctrine 2026-05-02. PF-only WR shows here once first PF paper trade closes."
         }
       />
       <MetricCard
-        label="Paper PnL (legacy)"
-        value={loading ? "—" : `${pnl >= 0 ? "+" : ""}$${pnl.toFixed(2)}`}
-        color={pnl >= 0 ? "green" : "red"}
+        label={primaryPnlLabel}
+        value={loading ? "—" : `${primaryPnl >= 0 ? "+" : ""}$${primaryPnl.toFixed(2)}`}
+        color={primaryPnl >= 0 ? "green" : "red"}
         loading={loading}
         tooltip={
-          "Cumulative realized P&L across all paper fills on Alpaca. Includes pre-PF mixed-source trades. " +
-          "Slippage and fees subtracted at fill time. Does NOT include unrealized P&L on open positions."
+          pf
+            ? "PatternFinding-only realized P&L (slippage and fees subtracted). Does NOT include unrealized P&L on the " +
+              "currently-open PF positions."
+            : "Cumulative realized P&L across all paper fills. Pre-PF mixed-source trades. Slippage/fees subtracted. " +
+              "Does NOT include unrealized P&L on open positions."
         }
       />
       <MetricCard

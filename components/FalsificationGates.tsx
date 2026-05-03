@@ -70,16 +70,23 @@ export function FalsificationGates({
   const t70Progress = t70Max - t70DaysLeft;
 
   // Doctrine 2026-05-02: Kraken go-live gates on PF paper-fill performance only.
-  // Pre-PF 27 paper fills (mixed-source) are excluded from T73/T21.
-  // Backend source-tagging arrives in PR 2; until then, PF closed = 0 (no PF paper
-  // closes have occurred yet — all 18 PF positions are still open).
-  const legacyPaperTrades = paper?.totalTrades ?? 0;
-  const legacyPaperWR = parseFloat(paper?.winRate ?? "0");
-  const pfPaperClosed = 0; // placeholder until PR 2 paper.bySource.patternfinding lands
-  const pfPaperWR = 0;
+  // Pre-PF mixed-source paper fills (legacy_pre_pf bucket) are excluded from T73/T21.
+  // bySource ships from backend PR 149.
+  const pfBucket = paper?.bySource?.patternfinding;
+  const legacyBucket = paper?.bySource?.legacy_pre_pf;
+  const pfPaperClosed = pfBucket?.totalTrades ?? 0;
+  const pfPaperWR = pfBucket ? parseFloat(pfBucket.winRate.replace("%", "")) || 0 : 0;
+  const legacyPaperTrades = legacyBucket?.totalTrades ?? paper?.totalTrades ?? 0;
+  const legacyPaperWR = legacyBucket
+    ? parseFloat(legacyBucket.winRate.replace("%", "")) || 0
+    : parseFloat(paper?.winRate ?? "0");
   const t73Status: "pass" | "active" | "blocked" = pfPaperClosed >= T73_TARGET ? "pass" : "active";
   const t21Status: "pass" | "active" | "blocked" =
-    pfPaperWR >= T21_WR_TARGET && pfPaperClosed >= T21_TRADES_TARGET ? "pass" : "active";
+    pfPaperWR >= T21_WR_TARGET && pfPaperClosed >= T21_TRADES_TARGET
+      ? "pass"
+      : pfPaperClosed >= T21_TRADES_TARGET && pfPaperWR < 40
+      ? "blocked"
+      : "active";
 
   return (
     <Card>
@@ -125,13 +132,13 @@ export function FalsificationGates({
               <p
                 className="text-xs text-muted-foreground cursor-help"
                 title={
-                  "T73 and T21 will read paper.bySource.patternfinding once PR 2 ships source-tagging at the alpacaTrader " +
-                  "closed-trade layer. Until then, PF closed paper-fill count is hardcoded 0 (true today — 18 PF positions " +
-                  "are open, none have closed yet)."
+                  "PF paper round-trips on Alpaca, source-tagged at execution. Backend bySource rollup distinguishes " +
+                  "patternfinding (counts toward gate) from legacy_pre_pf (excluded by doctrine 2026-05-02). " +
+                  "Source-tagging is forward-only — pre-PR historical 27 fills bucket as legacy_pre_pf because their " +
+                  "original source was lost when the killed pipelines were torn down."
                 }
               >
-                <span className="italic">PF-only counter activates with PR 2 source-tagging.</span>
-                {" "}Pre-PF historical (excluded by doctrine):{" "}
+                Pre-PF historical (excluded by doctrine):{" "}
                 <span className="font-mono">{legacyPaperTrades}</span> fills @{" "}
                 <span className="font-mono">{Math.round(legacyPaperWR)}%</span> WR (BTC scalp / picks / GLD era — all sources killed/dormant).
               </p>

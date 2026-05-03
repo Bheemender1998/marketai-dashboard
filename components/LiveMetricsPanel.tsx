@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PaperMetrics, PfSignalSim, MetricsBucket } from "@/lib/types";
+import type { PaperMetrics, PfSignalSim } from "@/lib/types";
 
 function MetricCell({
   label, live, backtest, format, color, tooltip,
@@ -50,14 +50,7 @@ export function LiveMetricsPanel({
     );
   }
 
-  // Prefer new pfSignalSim shape (backend PR 149 onwards); fall back to the
-  // backward-compat patternfinding alias if backend hasn't deployed yet.
-  const pf: PfSignalSim = metrics.pfSignalSim ?? {
-    ...((metrics.patternfinding ?? {
-      ann: 0, sharpe: 0, maxDD: 0, tradeCount: 0, totalPnl: 0, dayCount: 0,
-    }) as MetricsBucket),
-    lifetime: { total: 0, wins: 0, pnl: 0 },
-  };
+  const pf: PfSignalSim = metrics.pfSignalSim;
   const { backtest } = metrics;
   const fmtPct = (n: number) => `${(n * 100).toFixed(2)}%`;
   const fmtNum = (n: number) => n.toFixed(2);

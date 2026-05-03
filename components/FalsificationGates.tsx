@@ -88,6 +88,33 @@ export function FalsificationGates({
       ? "blocked"
       : "active";
 
+  // Live-source-filtered postmortem footer (PR 3, 2026-05-02). Backend PR 3
+  // adds bySource[src].brierSum so the dashboard can compute live-only Brier.
+  // Live-source WR is computed from sum(live.wins) / sum(live.total) — drops
+  // the contaminated picks/btc_scalp_sim/surge contribution.
+  const LIVE_SOURCE_KEYS = ["patternfinding", "tom", "t70"];
+  const { liveSourceWR, liveSourceBrier } = (() => {
+    const bs = postmortem?.bySource ?? {};
+    let wins = 0;
+    let total = 0;
+    let brierSum = 0;
+    let brierTotal = 0;
+    for (const k of LIVE_SOURCE_KEYS) {
+      const b = bs[k];
+      if (!b) continue;
+      total += b.total;
+      wins += b.wins;
+      if (typeof b.brierSum === "number") {
+        brierSum += b.brierSum;
+        brierTotal += b.total;
+      }
+    }
+    return {
+      liveSourceWR: total > 0 ? Math.round((wins / total) * 100) : null,
+      liveSourceBrier: brierTotal > 0 ? brierSum / brierTotal : null,
+    };
+  })();
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -143,12 +170,20 @@ export function FalsificationGates({
                 <span className="font-mono">{Math.round(legacyPaperWR)}%</span> WR (BTC scalp / picks / GLD era — all sources killed/dormant).
               </p>
               <p className="text-xs text-muted-foreground">
-                Postmortem context · Simulation WR:{" "}
-                <span className="font-mono">{postmortem?.winRate ?? "—"}%</span>
-                {" · "}Brier score:{" "}
-                <span className="font-mono">{postmortem?.avgBrier?.toFixed(3) ?? "—"}</span>
+                Postmortem context · Live-source sim WR:{" "}
+                <span className="font-mono">{liveSourceWR !== null ? `${liveSourceWR}%` : "—"}</span>
+                {" · "}Live-source Brier:{" "}
+                <span className="font-mono">{liveSourceBrier !== null ? liveSourceBrier.toFixed(3) : "—"}</span>
                 {" · "}Pending signals:{" "}
                 <span className="font-mono">{postmortem?.pendingCount?.toLocaleString() ?? "—"}</span>
+                {liveSourceWR === null && (
+                  <span
+                    className="ml-2 italic cursor-help"
+                    title="Per-source live filter requires backend PR 3 brierSum + bySource accumulators. Once deployed, mixed-source 26%/0.315 numbers (contaminated by killed picks/btc_scalp) get filtered out."
+                  >
+                    (live filter active post backend PR 3)
+                  </span>
+                )}
               </p>
             </div>
           </>

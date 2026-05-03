@@ -47,6 +47,10 @@ export interface SourceBucket {
   total: number;
   wins: number;
   pnl: number;
+  // brierSum added backend PR 3 (2026-05-02). Per-source Brier accumulator
+  // so dashboard can compute live-source-only avg Brier instead of the
+  // mixed-source aggregate that's contaminated by killed pipelines.
+  brierSum?: number;
 }
 
 export interface PostmortemStats {

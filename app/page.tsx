@@ -14,6 +14,7 @@ import { LiveMetricsPanel } from "@/components/LiveMetricsPanel";
 import { PFOnlyPanel } from "@/components/PFOnlyPanel";
 import { TruthSourcesLegend } from "@/components/TruthSourcesLegend";
 import { SignalActivityPanel } from "@/components/SignalActivityPanel";
+import { KrakenStagedSimPanel } from "@/components/KrakenStagedSimPanel";
 import type {
   PaperStats, PostmortemStats, Rejections, TradingStatus,
   EnrichedPositionsResponse, PaperMetrics,
@@ -66,6 +67,7 @@ export default function DashboardPage() {
       </div>
       <FalsificationGates paper={paper} postmortem={postmortem} loading={loading} />
       <SignalActivityPanel paper={paper} postmortem={postmortem} rejections={rejections} loading={loading} />
+      <KrakenStagedSimPanel rejections={rejections} postmortem={postmortem} loading={loading} />
       <BrierBreakdown postmortem={postmortem} paper={paper} loading={loading} />
       <SystemStatus />
       <Roadmap />

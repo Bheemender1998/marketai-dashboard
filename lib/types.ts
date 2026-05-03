@@ -113,11 +113,6 @@ export interface PfSignalSim extends MetricsBucket {
 
 export interface PaperMetrics {
   pfSignalSim: PfSignalSim;
-  /**
-   * Backward-compat alias kept by backend for one deploy cycle.
-   * Will be dropped in cleanup PR after this dashboard PR ships.
-   */
-  patternfinding?: MetricsBucket;
   backtest: {
     ann: number;
     sharpe: number;

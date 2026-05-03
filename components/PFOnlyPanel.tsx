@@ -16,8 +16,7 @@ export function PFOnlyPanel({
   loading: boolean;
 }) {
   const pfPositions = positions?.filter(p => p.source === "patternfinding") ?? [];
-  // Read pfSignalSim (post backend PR 149); fall back to legacy patternfinding alias.
-  const pf = metrics?.pfSignalSim ?? metrics?.patternfinding;
+  const pf = metrics?.pfSignalSim;
   const backtest = metrics?.backtest;
   const progress = backtest ? (pf?.tradeCount ?? 0) / backtest.target : 0;
   const progressPct = Math.min(100, Math.round(progress * 100));

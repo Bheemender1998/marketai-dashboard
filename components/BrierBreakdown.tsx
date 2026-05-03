@@ -47,6 +47,21 @@ export function BrierBreakdown({
   // PF paper closes from backend PR 149 source-tagging.
   const pfPaperClosed = paper?.bySource?.patternfinding?.totalTrades ?? 0;
 
+  // Live-source-weighted avg Brier (PR 3, 2026-05-02). Top-level postmortem.avgBrier
+  // is mixed-source — inflated by killed picks/btc_scalp_sim contamination.
+  // Per-source brierSum from backend PR 3 lets us compute the honest live-only number.
+  const liveBrier = (() => {
+    let sumBrier = 0;
+    let sumTotal = 0;
+    for (const [, bucket] of liveEntries) {
+      if (typeof bucket.brierSum === "number" && bucket.total > 0) {
+        sumBrier += bucket.brierSum;
+        sumTotal += bucket.total;
+      }
+    }
+    return sumTotal > 0 ? sumBrier / sumTotal : null;
+  })();
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -66,14 +81,23 @@ export function BrierBreakdown({
             className="text-xs text-muted-foreground font-mono cursor-help underline decoration-dotted decoration-muted-foreground/30"
             title={
               "Brier score measures probabilistic calibration: 0.0 = perfect, 0.25 = random coin flip, 1.0 = always wrong. " +
-              "Lower is better. Mean of squared (predicted_prob − actual_outcome) across resolved signals. Inflated historically " +
-              "by old Claude picks contamination — per-source breakdown below shows clean sources only."
+              "Lower is better. Mean of squared (predicted_prob − actual_outcome) across resolved signals. " +
+              (liveBrier !== null
+                ? "Computed across LIVE sources only (post backend PR 3); killed pipelines excluded by doctrine. " +
+                  `Mixed-source historical: ${postmortem?.avgBrier?.toFixed(3) ?? "—"}.`
+                : "Per-source brierSum not yet present (deploys with backend PR 3); falling back to mixed-source aggregate inflated by killed picks contamination.")
             }
           >
-            avg Brier:{" "}
-            <span className={postmortem?.avgBrier != null && postmortem.avgBrier > 0.25 ? "text-red-400" : "text-emerald-400"}>
-              {postmortem?.avgBrier?.toFixed(3) ?? "—"}
-            </span>
+            avg Brier (live):{" "}
+            {liveBrier !== null ? (
+              <span className={liveBrier > 0.25 ? "text-red-400" : "text-emerald-400"}>
+                {liveBrier.toFixed(3)}
+              </span>
+            ) : (
+              <span className={postmortem?.avgBrier != null && postmortem.avgBrier > 0.25 ? "text-amber-400" : "text-emerald-400"}>
+                {postmortem?.avgBrier?.toFixed(3) ?? "—"}
+              </span>
+            )}
             {" "}(random = 0.250)
           </span>
         </div>

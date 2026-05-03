@@ -47,14 +47,54 @@ export function OpenPositions({
             <TableHeader className="sticky top-0 bg-background z-10">
               <TableRow>
                 <TableHead className="text-xs">Ticker</TableHead>
-                <TableHead className="text-xs">Side</TableHead>
-                <TableHead className="text-xs text-right">Qty</TableHead>
-                <TableHead className="text-xs text-right">Entry</TableHead>
-                <TableHead className="text-xs text-right">Current</TableHead>
-                <TableHead className="text-xs text-right">Mkt Val</TableHead>
-                <TableHead className="text-xs text-right">Stop</TableHead>
-                <TableHead className="text-xs text-right">Target</TableHead>
-                <TableHead className="text-xs text-right">U-P&amp;L</TableHead>
+                <TableHead
+                  className="text-xs cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="LONG = bet price goes up (buy now, sell later). SHORT = bet price goes down (borrow + sell now, buy back later). PF SHORTs require conviction ≥0.75 and shortable-on-Alpaca asset."
+                >
+                  Side
+                </TableHead>
+                <TableHead
+                  className="text-xs text-right cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="Position quantity (shares for stocks, units for crypto). Sized from confidence: 80-100% conf=$55, 65-79%=$37, 50-64%=$28, <50%=$18. Hard cap $74."
+                >
+                  Qty
+                </TableHead>
+                <TableHead
+                  className="text-xs text-right cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="Entry price = price at which the paper trade opened on Alpaca. Slippage from the signal's intended entry is captured in slippageUsd on the closed-trade record."
+                >
+                  Entry
+                </TableHead>
+                <TableHead
+                  className="text-xs text-right cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="Current market price (latest bar / quote from Alpaca). Updated every dashboard refresh (~30s)."
+                >
+                  Current
+                </TableHead>
+                <TableHead
+                  className="text-xs text-right cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="Market value = qty × current price. Notional exposure of this position right now."
+                >
+                  Mkt Val
+                </TableHead>
+                <TableHead
+                  className="text-xs text-right cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="Stop loss price. Trailing logic: starts at the signal's specified stop, advances to breakeven once unrealized P&L hits 50% of target distance, trails at 30% distance after that."
+                >
+                  Stop
+                </TableHead>
+                <TableHead
+                  className="text-xs text-right cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="Take-profit target price. Partial profit (50% of position) closed at 75% of target distance; remainder rides trailing stop."
+                >
+                  Target
+                </TableHead>
+                <TableHead
+                  className="text-xs text-right cursor-help underline decoration-dotted decoration-muted-foreground/40"
+                  title="Unrealized P&L = (current − entry) × qty for LONG, (entry − current) × qty for SHORT. Floats with current price; locks in only when the position closes."
+                >
+                  U-P&amp;L
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

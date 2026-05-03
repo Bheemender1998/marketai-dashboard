@@ -69,14 +69,25 @@ export function FalsificationGates({
   const t70Max = 14;
   const t70Progress = t70Max - t70DaysLeft;
 
-  const totalTrades = paper?.totalTrades ?? 0;
-  const wr = parseFloat(paper?.winRate ?? "0");
+  // Doctrine 2026-05-02: Kraken go-live gates on PF paper-fill performance only.
+  // Pre-PF 27 paper fills (mixed-source) are excluded from T73/T21.
+  // Backend source-tagging arrives in PR 2; until then, PF closed = 0 (no PF paper
+  // closes have occurred yet — all 18 PF positions are still open).
+  const legacyPaperTrades = paper?.totalTrades ?? 0;
+  const legacyPaperWR = parseFloat(paper?.winRate ?? "0");
+  const pfPaperClosed = 0; // placeholder until PR 2 paper.bySource.patternfinding lands
+  const pfPaperWR = 0;
+  const t73Status: "pass" | "active" | "blocked" = pfPaperClosed >= T73_TARGET ? "pass" : "active";
+  const t21Status: "pass" | "active" | "blocked" =
+    pfPaperWR >= T21_WR_TARGET && pfPaperClosed >= T21_TRADES_TARGET ? "pass" : "active";
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Falsification Gates</CardTitle>
-        <p className="text-xs text-muted-foreground">Pre-committed conditions that unlock the next phase</p>
+        <p className="text-xs text-muted-foreground">
+          Pre-committed conditions that unlock the next phase · PF-only doctrine 2026-05-02
+        </p>
       </CardHeader>
       <CardContent className="space-y-6">
         {loading ? (
@@ -95,24 +106,37 @@ export function FalsificationGates({
             <GateRow
               id="T73"
               label="Claude Role Re-evaluation"
-              desc="After 30+ closed PF paper trades: evaluate WR by conviction tier → decide whether to add Claude as thesis validator."
-              value={totalTrades}
+              desc="After 30+ closed PF paper round-trips: evaluate WR by conviction tier → decide Claude's role as thesis validator. PF-only count; pre-PF historical 27 fills excluded by doctrine."
+              value={pfPaperClosed}
               max={T73_TARGET}
-              unit=" trades"
-              status={totalTrades >= T73_TARGET ? "pass" : "active"}
+              unit=" PF closes"
+              status={t73Status}
             />
             <GateRow
               id="T21"
               label="Go-Live WR Gate (Kraken)"
-              desc="60% WR over 30+ paper trades required before TRADING_ENABLED=true. Currently: paper ledger."
-              value={Math.round(wr)}
+              desc="≥60% WR over ≥30 closed PF paper round-trips required before TRADING_ENABLED=true. SHORT crypto signals tracked separately as Kraken-staged sim cohort (does NOT count toward this gate)."
+              value={Math.round(pfPaperWR)}
               max={T21_WR_TARGET}
               unit="%"
-              status={wr >= T21_WR_TARGET && totalTrades >= T21_TRADES_TARGET ? "pass" : wr < 40 ? "blocked" : "active"}
+              status={t21Status}
             />
-            <div className="pt-2 border-t border-border">
+            <div className="pt-2 border-t border-border space-y-1">
+              <p
+                className="text-xs text-muted-foreground cursor-help"
+                title={
+                  "T73 and T21 will read paper.bySource.patternfinding once PR 2 ships source-tagging at the alpacaTrader " +
+                  "closed-trade layer. Until then, PF closed paper-fill count is hardcoded 0 (true today — 18 PF positions " +
+                  "are open, none have closed yet)."
+                }
+              >
+                <span className="italic">PF-only counter activates with PR 2 source-tagging.</span>
+                {" "}Pre-PF historical (excluded by doctrine):{" "}
+                <span className="font-mono">{legacyPaperTrades}</span> fills @{" "}
+                <span className="font-mono">{Math.round(legacyPaperWR)}%</span> WR (BTC scalp / picks / GLD era — all sources killed/dormant).
+              </p>
               <p className="text-xs text-muted-foreground">
-                Simulation WR (postmortem):{" "}
+                Postmortem context · Simulation WR:{" "}
                 <span className="font-mono">{postmortem?.winRate ?? "—"}%</span>
                 {" · "}Brier score:{" "}
                 <span className="font-mono">{postmortem?.avgBrier?.toFixed(3) ?? "—"}</span>

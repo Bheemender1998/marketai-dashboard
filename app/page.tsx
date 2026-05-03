@@ -12,6 +12,7 @@ import { SystemStatus } from "@/components/SystemStatus";
 import { Roadmap } from "@/components/Roadmap";
 import { LiveMetricsPanel } from "@/components/LiveMetricsPanel";
 import { PFOnlyPanel } from "@/components/PFOnlyPanel";
+import { TruthSourcesLegend } from "@/components/TruthSourcesLegend";
 import type {
   PaperStats, PostmortemStats, Rejections, TradingStatus,
   EnrichedPositionsResponse, PaperMetrics,
@@ -55,6 +56,7 @@ export default function DashboardPage() {
     <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
       <Header isOnline={isOnline} lastUpdated={lastUpdated} />
       <PerfPanel paper={paper} trading={trading} loading={loading} />
+      <TruthSourcesLegend />
       <LiveMetricsPanel metrics={metrics} loading={metricsLoading} />
       <PFOnlyPanel positions={enriched?.positions} metrics={metrics} loading={loading} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -13,6 +13,7 @@ import { Roadmap } from "@/components/Roadmap";
 import { LiveMetricsPanel } from "@/components/LiveMetricsPanel";
 import { PFOnlyPanel } from "@/components/PFOnlyPanel";
 import { TruthSourcesLegend } from "@/components/TruthSourcesLegend";
+import { SignalActivityPanel } from "@/components/SignalActivityPanel";
 import type {
   PaperStats, PostmortemStats, Rejections, TradingStatus,
   EnrichedPositionsResponse, PaperMetrics,
@@ -64,6 +65,7 @@ export default function DashboardPage() {
         <RejectionBreakdown rejections={rejections} loading={loading} />
       </div>
       <FalsificationGates paper={paper} postmortem={postmortem} loading={loading} />
+      <SignalActivityPanel paper={paper} postmortem={postmortem} rejections={rejections} loading={loading} />
       <BrierBreakdown postmortem={postmortem} paper={paper} loading={loading} />
       <SystemStatus />
       <Roadmap />

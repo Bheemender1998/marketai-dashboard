@@ -27,20 +27,36 @@ function ModuleCard({ name, status, desc }: { name: string; status: ModuleStatus
   );
 }
 
+// Doctrine 2026-05-02: hide KILLED tier from the live system view.
+// Killed pipelines confuse the live picture; their existence is visible in
+// git history + memory archives. Dashboard renders only what's running or
+// gated to run.
 const SECTIONS: Array<{ title: string; filter: ModuleStatus }> = [
   { title: "Live", filter: "live" },
   { title: "Gated", filter: "gated" },
   { title: "Disabled", filter: "disabled" },
-  { title: "Killed", filter: "killed" },
 ];
 
 export function SystemStatus() {
+  const killedCount = MODULES.filter((m) => m.status === "killed").length;
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">System Status</CardTitle>
-          <span className="text-xs text-muted-foreground">Audited 2026-05-01</span>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <CardTitle
+            className="text-base cursor-help underline decoration-dotted decoration-muted-foreground/40"
+            title={
+              "System status by tier. LIVE = currently running and executing. GATED = wired in code but blocked behind " +
+              "an env flag or threshold (will activate when condition met). DISABLED = explicitly turned off via env flag " +
+              "(autonomy gates, morning brief). KILLED tier is hidden by doctrine 2026-05-02 — those modules are dead and " +
+              "won't be revived; rendering them confuses the live picture."
+            }
+          >
+            System Status
+          </CardTitle>
+          <span className="text-xs text-muted-foreground">
+            Audited 2026-05-01 · {killedCount} killed modules hidden
+          </span>
         </div>
       </CardHeader>
       <CardContent>

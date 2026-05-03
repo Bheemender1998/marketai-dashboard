@@ -25,7 +25,7 @@ export const MODULES: Module[] = [
   { name: "Watchlist Autonomy", status: "disabled", desc: "WATCHLIST_AUTONOMY_DISABLED=true" },
   { name: "Morning Brief", status: "disabled", desc: "MORNING_BRIEF_DISABLED=true (7am cron silenced)" },
   // GATED
-  { name: "Kraken Live", status: "gated", desc: "TRADING_ENABLED not set — needs 60% WR gate (T21)" },
+  { name: "Kraken Live", status: "gated", desc: "TRADING_ENABLED not set — needs ≥30 PF paper closes @ ≥60% WR (T21, PF-only doctrine 2026-05-02)" },
   { name: "T70 Auto-Execute", status: "gated", desc: "Alert-only until 2026-05-09 review" },
   // KILLED
   { name: "Surge Scanner", status: "killed", desc: "Killed 2026-04-25 — falsified at every sub-cut" },
@@ -48,10 +48,10 @@ export const ROADMAP: RoadmapItem[] = [
   { name: "Trailing Stop exits", phase: "active" },
   { name: "Economic Calendar blackout", phase: "active" },
   { name: "T70 scanner auto-execute", phase: "gated", gate: "T70 review 2026-05-09" },
-  { name: "Claude thesis validator", phase: "gated", gate: "T73: 30+ PF trades" },
-  { name: "Confidence calibration", phase: "gated", gate: "T3: 30+ paper trades" },
-  { name: "Agent ablation study", phase: "gated", gate: "T4: 30+ trades" },
-  { name: "Kraken live trading", phase: "gated", gate: "T21: 60% WR" },
+  { name: "Claude thesis validator", phase: "gated", gate: "T73: 30+ PF paper closes" },
+  { name: "Confidence calibration", phase: "gated", gate: "T3: 30+ PF paper closes" },
+  { name: "Agent ablation study", phase: "gated", gate: "T4: 30+ PF paper closes" },
+  { name: "Kraken live trading", phase: "gated", gate: "T21: 60% WR over 30+ PF paper closes" },
   { name: "Surge Scanner", phase: "killed" },
   { name: "BTC Scalp", phase: "killed" },
   { name: "Research Agent", phase: "killed" },

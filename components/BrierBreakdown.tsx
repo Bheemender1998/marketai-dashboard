@@ -44,9 +44,8 @@ export function BrierBreakdown({
   // Killed sources (picks, btc_scalp_sim, surge, etc.) are intentionally hidden.
   const liveEntries = Object.entries(bySource).filter(([source]) => source in LIVE_SOURCES);
   const pfPaperOpen = paper?.openPositions?.length ?? 0;
-  // PF paper fills: 0 in PR 1 (no source-tagging yet on alpacaTrader closed-trades).
-  // Will read paper.bySource.patternfinding after PR 2 lands.
-  const pfPaperClosed = 0;
+  // PF paper closes from backend PR 149 source-tagging.
+  const pfPaperClosed = paper?.bySource?.patternfinding?.totalTrades ?? 0;
 
   return (
     <Card>
@@ -57,7 +56,8 @@ export function BrierBreakdown({
             title={
               "Per-source SIGNAL SIMULATION quality from the postmortem agent. NOT real paper fills — these are notional " +
               "stop/target outcomes computed against price action, regardless of whether a paper trade ever executed. " +
-              "Killed sources (picks, btc_scalp_sim, surge) are filtered out per the 2026-05-02 dashboard doctrine."
+              "Killed sources (picks, btc_scalp_sim, surge) are filtered out per the 2026-05-02 dashboard doctrine. " +
+              "T73 gate counter below reads PF paper-fill closes (post backend PR 149), distinct from these sim resolutions."
             }
           >
             Signal Source Quality
@@ -130,9 +130,6 @@ export function BrierBreakdown({
             >
               T73 gate: ≥30 closed PF paper trades → evaluate Claude role.{" "}
               <span className="font-mono">{pfPaperClosed}/30</span> closed · {pfPaperOpen} open.
-              <span className="ml-2 text-[10px] italic text-muted-foreground/70">
-                (closed counter activates with PR 2 source-tagging)
-              </span>
             </p>
           </div>
         )}

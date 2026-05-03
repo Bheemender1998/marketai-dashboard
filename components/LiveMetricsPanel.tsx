@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PaperMetrics } from "@/lib/types";
+import type { PaperMetrics, PfSignalSim, MetricsBucket } from "@/lib/types";
 
 function MetricCell({
   label, live, backtest, format, color, tooltip,
@@ -50,7 +50,15 @@ export function LiveMetricsPanel({
     );
   }
 
-  const { patternfinding: pf, backtest } = metrics;
+  // Prefer new pfSignalSim shape (backend PR 149 onwards); fall back to the
+  // backward-compat patternfinding alias if backend hasn't deployed yet.
+  const pf: PfSignalSim = metrics.pfSignalSim ?? {
+    ...((metrics.patternfinding ?? {
+      ann: 0, sharpe: 0, maxDD: 0, tradeCount: 0, totalPnl: 0, dayCount: 0,
+    }) as MetricsBucket),
+    lifetime: { total: 0, wins: 0, pnl: 0 },
+  };
+  const { backtest } = metrics;
   const fmtPct = (n: number) => `${(n * 100).toFixed(2)}%`;
   const fmtNum = (n: number) => n.toFixed(2);
   const colorPos = (n: number) => n >= 0 ? "text-emerald-400" : "text-red-400";
@@ -58,6 +66,7 @@ export function LiveMetricsPanel({
   const colorDD = (n: number) => n > -0.05 ? "text-emerald-400" : n > -0.15 ? "text-amber-400" : "text-red-400";
 
   const isEmpty = pf.tradeCount === 0;
+  const lifetimeWR = pf.lifetime.total > 0 ? Math.round((pf.lifetime.wins / pf.lifetime.total) * 100) : 0;
 
   return (
     <Card>
@@ -76,8 +85,13 @@ export function LiveMetricsPanel({
             PF Signal Simulation vs Backtest
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            {pf.tradeCount} trades · {pf.dayCount} active days
-            {isEmpty && " (windowed view of last 200 ring-buffer entries)"}
+            windowed: {pf.tradeCount} trades · {pf.dayCount} days
+            {" · "}lifetime:{" "}
+            <span className="font-mono">{pf.lifetime.total}</span> resolutions ·{" "}
+            <span className="font-mono">{lifetimeWR}%</span> WR ·{" "}
+            <span className={`font-mono ${pf.lifetime.pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {pf.lifetime.pnl >= 0 ? "+" : ""}${pf.lifetime.pnl}
+            </span>
           </p>
         </div>
       </CardHeader>
@@ -86,7 +100,15 @@ export function LiveMetricsPanel({
           <div className="py-4 text-center">
             <p className="text-sm text-muted-foreground mb-1">PF: awaiting first signal resolution in the live ring buffer</p>
             <p className="text-[11px] text-muted-foreground">
-              5 lifetime PF resolutions exist but rotated out of the 200-entry buffer. Backtest baseline: ANN{" "}
+              {pf.lifetime.total > 0 ? (
+                <>
+                  {pf.lifetime.total} lifetime PF resolutions exist but rotated out of the 200-entry buffer (currently dominated
+                  by stale surge-era entries).{" "}
+                </>
+              ) : (
+                <>No PF resolutions yet. </>
+              )}
+              Backtest baseline: ANN{" "}
               <span className="font-mono">{fmtPct(backtest.ann)}</span> · Sharpe{" "}
               <span className="font-mono">{fmtNum(backtest.sharpe)}</span> · MaxDD{" "}
               <span className="font-mono">{fmtPct(backtest.maxDD)}</span> over {backtest.events.toLocaleString()} events.

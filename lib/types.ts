@@ -15,6 +15,18 @@ export interface RecentTrade {
   win: boolean;
   closeReason: string;
   date: string;
+  // Source-tagging shipped backend PR 149 (2026-05-02). Forward-only:
+  // pre-PR closed trades have null source, classified as legacy_pre_pf
+  // by the bySource rollup.
+  source?: string | null;
+}
+
+export interface SourceTradesBucket {
+  totalTrades: number;
+  wins: number;
+  losses: number;
+  winRate: string;
+  totalPnl: number;
 }
 
 export interface PaperStats {
@@ -26,6 +38,9 @@ export interface PaperStats {
   totalPnl: number;
   openPositions: OpenPosition[];
   recentTrades: RecentTrade[];
+  // Per-source rollup added backend PR 149. Always-present field; key
+  // legacy_pre_pf holds pre-PF mixed-source historical fills.
+  bySource?: Record<string, SourceTradesBucket>;
 }
 
 export interface SourceBucket {
@@ -84,9 +99,21 @@ export interface MetricsBucket {
   dayCount: number;
 }
 
+export interface PfSignalSim extends MetricsBucket {
+  lifetime: {
+    total: number;
+    wins: number;
+    pnl: number;
+  };
+}
+
 export interface PaperMetrics {
-  all: MetricsBucket;
-  patternfinding: MetricsBucket;
+  pfSignalSim: PfSignalSim;
+  /**
+   * Backward-compat alias kept by backend for one deploy cycle.
+   * Will be dropped in cleanup PR after this dashboard PR ships.
+   */
+  patternfinding?: MetricsBucket;
   backtest: {
     ann: number;
     sharpe: number;

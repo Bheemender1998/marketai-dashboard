@@ -60,7 +60,7 @@ export default function DashboardPage() {
       <PerfPanel paper={paper} trading={trading} loading={loading} />
       <TruthSourcesLegend />
       <LiveMetricsPanel metrics={metrics} loading={metricsLoading} />
-      <PFOnlyPanel positions={enriched?.positions} metrics={metrics} loading={loading} />
+      <PFOnlyPanel positions={enriched?.positions} metrics={metrics} paper={paper} loading={loading} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <OpenPositions positions={enriched?.positions} loading={enrichedLoading} />
         <RejectionBreakdown rejections={rejections} loading={loading} />

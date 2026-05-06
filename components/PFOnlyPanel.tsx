@@ -102,7 +102,6 @@ export function PFOnlyPanel({
 }) {
   const pfPositions = positions?.filter((p) => p.source === "patternfinding") ?? [];
   const backtest = metrics?.backtest;
-  const pfSim = metrics?.pfSignalSim;
   const byPF = paper?.bySource?.patternfinding;
 
   const actual = computePFActualMetrics(paper?.recentTrades ?? [], pfPositions);
@@ -140,32 +139,6 @@ export function PFOnlyPanel({
           <Skeleton className="h-32 w-full" />
         ) : (
           <>
-            {/* ── Simulation context strip ── */}
-            <div
-              className="rounded-md bg-muted/40 border border-border/40 px-3 py-2 text-[11px] text-muted-foreground"
-              title="Raw PF signal pool — postmortem agent tracks every signal against its notional stop/target, independent of whether an Alpaca order was placed. ConvictionScorer + safety gates filter this pool down to actual paper fills."
-            >
-              <span className="font-medium text-foreground/60">Signal simulation (unfiltered pool):</span>
-              {pfSim ? (
-                <span className="ml-2 font-mono">
-                  {pfSim.tradeCount} trades · ANN{" "}
-                  <span className={pfSim.ann >= 0 ? "text-emerald-400" : "text-red-400"}>
-                    {fmtPct(pfSim.ann)}
-                  </span>{" "}
-                  · Sharpe{" "}
-                  <span className={pfSim.sharpe >= 0 ? "text-emerald-400" : "text-red-400"}>
-                    {pfSim.sharpe.toFixed(2)}
-                  </span>{" "}
-                  · MaxDD{" "}
-                  <span className={pfSim.maxDD > -0.05 ? "text-emerald-400" : "text-red-400"}>
-                    {fmtPct(pfSim.maxDD)}
-                  </span>
-                </span>
-              ) : (
-                <span className="ml-2 text-muted-foreground">no windowed data yet</span>
-              )}
-            </div>
-
             {/* ── Closed fills metrics ── */}
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">

@@ -4,10 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { PaperStats, PostmortemStats } from "@/lib/types";
 
-const T70_REVIEW_DATE = new Date("2026-05-09T00:00:00-07:00");
-const T73_TARGET = 30;
-const T21_WR_TARGET = 60;
-const T21_TRADES_TARGET = 30;
+const T70_REVIEW_DATE = new Date("2026-05-23T00:00:00-07:00");
+// T73 verdict-N (decided early Option B 2026-05-15 at N=27 because Wilson
+// worst-case at N=30 still cleared 55% gate). Bar renders 100% complete.
+const T73_DECISION_N = 27;
+// Council go-live ladder (supersedes T21). N closes is the only gate
+// the dashboard tracks here; Sharpe + Brier surface in the postmortem
+// footer below.
+const COUNCIL_N_TARGET = 60;
 
 function GateRow({
   id,
@@ -80,13 +84,14 @@ export function FalsificationGates({
   const legacyPaperWR = legacyBucket
     ? parseFloat(legacyBucket.winRate.replace("%", "")) || 0
     : parseFloat(paper?.winRate ?? "0");
-  const t73Status: "pass" | "active" | "blocked" = pfPaperClosed >= T73_TARGET ? "pass" : "active";
-  const t21Status: "pass" | "active" | "blocked" =
-    pfPaperWR >= T21_WR_TARGET && pfPaperClosed >= T21_TRADES_TARGET
-      ? "pass"
-      : pfPaperClosed >= T21_TRADES_TARGET && pfPaperWR < 40
-      ? "blocked"
-      : "active";
+  // T73 verdict-locked Option B 2026-05-15 — render as PASS regardless of
+  // current N (Wilson worst-case at decision time already cleared the gate).
+  const t73Status: "pass" | "active" | "blocked" = "pass";
+  // Council ladder = N≥60. Status is pass when N≥60, active otherwise.
+  // No WR-blocked branch here — council ladder is a conjunction (N + Sharpe
+  // + Brier), not single-blocked on any one metric.
+  const councilStatus: "pass" | "active" | "blocked" =
+    pfPaperClosed >= COUNCIL_N_TARGET ? "pass" : "active";
 
   // Live-source-filtered postmortem footer (PR 3, 2026-05-02). Backend PR 3
   // adds bySource[src].brierSum so the dashboard can compute live-only Brier.
@@ -120,7 +125,7 @@ export function FalsificationGates({
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Falsification Gates</CardTitle>
         <p className="text-xs text-muted-foreground">
-          Pre-committed conditions that unlock the next phase · PF-only doctrine 2026-05-02
+          Pre-committed conditions on the path to TRADING_ENABLED=true · PF-only doctrine 2026-05-02 · Edge EARLY-PROVEN 2026-05-15
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -131,7 +136,7 @@ export function FalsificationGates({
             <GateRow
               id="T70"
               label="Deterministic Scanner Review"
-              desc="T70 scanner running alert-only. Review 2026-05-09 — if ≥5 signals AND ≥50% WR, enable auto-execute."
+              desc="T70 scanner running alert-only. Review 2026-05-23 (Branch C extension — low signal volume). If ≥5 signals AND ≥50% WR at review, enable auto-execute."
               value={t70Progress}
               max={t70Max}
               unit="d"
@@ -139,21 +144,21 @@ export function FalsificationGates({
             />
             <GateRow
               id="T73"
-              label="Claude Role Re-evaluation"
-              desc="After 30+ closed PF paper round-trips: evaluate WR by conviction tier → decide Claude's role as thesis validator. PF-only count; pre-PF historical 27 fills excluded by doctrine."
-              value={pfPaperClosed}
-              max={T73_TARGET}
+              label="Edge Proof Gate (CLEARED 2026-05-15)"
+              desc="Verdict 2026-05-15 Option B locked at N=27 — 24W/4L (85.2% WR), Wilson 95% LB 67.5% > 55% gate by 12.5pp. Claude bypassed permanently; harden ConvictionScorer instead."
+              value={T73_DECISION_N}
+              max={T73_DECISION_N}
               unit=" PF closes"
               status={t73Status}
             />
             <GateRow
-              id="T21"
-              label="Go-Live WR Gate (Kraken)"
-              desc="≥60% WR over ≥30 closed PF paper round-trips required before TRADING_ENABLED=true. SHORT crypto signals tracked separately as Kraken-staged sim cohort (does NOT count toward this gate)."
-              value={Math.round(pfPaperWR)}
-              max={T21_WR_TARGET}
-              unit="%"
-              status={t21Status}
+              id="N≥60"
+              label="Council Go-Live Ladder"
+              desc="PF cohort target = N≥60 closes for council eval. Full ladder is N + Sharpe≥1.0 + Brier≤0.25 (Sharpe and Brier surface in postmortem footer below). Supersedes T21. ETA ~2026-06-07 at current cadence."
+              value={pfPaperClosed}
+              max={COUNCIL_N_TARGET}
+              unit=" PF closes"
+              status={councilStatus}
             />
             <div className="pt-2 border-t border-border space-y-1">
               <p

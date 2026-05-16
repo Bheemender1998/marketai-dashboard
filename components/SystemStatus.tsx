@@ -55,7 +55,7 @@ export function SystemStatus() {
             System Status
           </CardTitle>
           <span className="text-xs text-muted-foreground">
-            Audited 2026-05-01 · {killedCount} killed modules hidden
+            Audited 2026-05-16 · {killedCount} killed modules hidden
           </span>
         </div>
       </CardHeader>

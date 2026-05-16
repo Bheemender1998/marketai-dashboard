@@ -82,10 +82,11 @@ export function PerfPanel({
         loading={loading}
         tooltip={
           pf
-            ? "PatternFinding-only paper-fill win rate — counts toward the Kraken go-live gate (T21: ≥60% WR over ≥30 PF closes). " +
+            ? "PatternFinding-only paper-fill win rate — feeds the council go-live ladder (N≥60 PF closes + Sharpe≥1.0 + Brier≤0.25). " +
+              "T73 edge-proof gate already CLEARED 2026-05-15 at N=27 (Option B, Wilson LB 67.5%). " +
               "Pre-PF mixed-source fills are bucketed separately as legacy_pre_pf and excluded by doctrine 2026-05-02."
             : "Win rate across all paper fills on Alpaca. Pre-PF mixed-source mix (BTC scalp, picks, GLD era). " +
-              "EXCLUDED from Kraken go-live gate by doctrine 2026-05-02. PF-only WR shows here once first PF paper trade closes."
+              "EXCLUDED from council go-live gate by doctrine 2026-05-02. PF-only WR shows here once first PF paper trade closes."
         }
       />
       <MetricCard
@@ -126,12 +127,13 @@ export function PerfPanel({
         label="Kraken Live"
         value={trading?.tradingEnabled ? "ON" : "OFF"}
         color={trading?.tradingEnabled ? "green" : "yellow"}
-        sub={trading?.tradingEnabled ? undefined : "Needs ≥30 PF closes @ ≥60% WR"}
+        sub={trading?.tradingEnabled ? undefined : "Council N≥60 + Sharpe≥1.0 + Brier≤0.25"}
         loading={loading}
         tooltip={
-          "TRADING_ENABLED env flag — controls Kraken live trading. PF-only doctrine 2026-05-02: requires ≥30 closed " +
-          "PatternFinding paper round-trips on Alpaca at ≥60% WR before flip. Plus pentest + killswitch sim within 90 days, " +
-          "rollback memo committed, Kraken Phase 1 LONG-only at flip."
+          "TRADING_ENABLED env flag — controls real-venue live trading (Alpaca for stocks; Kraken not in active gate path). " +
+          "Council go-live ladder: ≥60 closed PatternFinding paper round-trips at Sharpe≥1.0 and Brier≤0.25. " +
+          "T73 edge-proof gate CLEARED 2026-05-15 at N=27 (Option B). Plus pentest + killswitch sim, rollback memo committed, " +
+          "Kraken Phase 1 LONG-only at flip. ETA ~2026-06-07 at current PF close cadence."
         }
       />
       <MetricCard

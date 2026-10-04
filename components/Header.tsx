@@ -18,7 +18,7 @@ export function Header({ isOnline, lastUpdated }: { isOnline: boolean; lastUpdat
           </span>
         )}
         <Badge variant={isOnline ? "default" : "destructive"} className="text-xs">
-          {isOnline ? "● LIVE" : "○ OFFLINE"}
+          {isOnline ? "API online" : "API offline"}
         </Badge>
       </div>
     </div>

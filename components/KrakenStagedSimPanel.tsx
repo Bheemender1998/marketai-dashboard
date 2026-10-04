@@ -103,10 +103,9 @@ export function KrakenStagedSimPanel({
 
             <div className="pt-3 border-t border-border">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                <strong className="text-foreground">Activation criterion (proposed):</strong> ≥10 round-trip-equivalent
-                sim resolutions at ≥60% sim-WR before Kraken Phase 1 LONG-only gate unlocks Phase 2 SHORT-crypto
-                trading. Until then, Kraken go-live (when it triggers) is{" "}
-                <span className="font-mono">KRAKEN_DIRECTION_WHITELIST=LONG</span> only.
+                <strong className="text-foreground">Research-only track.</strong> The historical proposal of ≥10
+                simulated resolutions at ≥60% win rate is not capital authorization. All accounting, predictive,
+                risk and operational gates must independently pass before any live-trading decision.
               </p>
             </div>
           </div>

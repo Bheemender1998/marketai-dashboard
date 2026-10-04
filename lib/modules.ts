@@ -25,7 +25,7 @@ export const MODULES: Module[] = [
   { name: "Watchlist Autonomy", status: "disabled", desc: "WATCHLIST_AUTONOMY_DISABLED=true" },
   { name: "Morning Brief", status: "disabled", desc: "MORNING_BRIEF_DISABLED=true (7am cron silenced)" },
   // GATED
-  { name: "Kraken Live", status: "gated", desc: "TRADING_ENABLED not set — council ladder: N≥60 PF closes + Sharpe≥1.0 + Brier≤0.25. T73 cleared 2026-05-15 at N=27 (85% WR, Wilson LB 67.5%)." },
+  { name: "Kraken Live", status: "gated", desc: "Real-capital readiness remains NO_GO; counts alone cannot establish an edge." },
   { name: "T70 Auto-Execute", status: "gated", desc: "Alert-only — 14-day review extended to 2026-05-23 (Branch C — low signal volume)" },
   // KILLED
   { name: "Surge Scanner", status: "killed", desc: "Killed 2026-04-25 — falsified at every sub-cut" },
@@ -49,7 +49,7 @@ export const ROADMAP: RoadmapItem[] = [
   { name: "Economic Calendar blackout", phase: "active" },
   { name: "T70 scanner auto-execute", phase: "gated", gate: "T70 14-day review 2026-05-23 (Branch C)" },
   { name: "Confidence calibration", phase: "gated", gate: "ConvictionScorer recalibration on PF council N≥60 cohort" },
-  { name: "Kraken live trading", phase: "gated", gate: "Council ladder: N≥60 PF closes + Sharpe≥1.0 + Brier≤0.25 (~2026-06-07 ETA)" },
+  { name: "Kraken live trading", phase: "gated", gate: "All accounting, predictive, risk and operational gates must independently pass." },
   { name: "Autoresearch ratchet — TOM window-N", phase: "gated", gate: "First propose-doc shipped 2026-05-15; shadow.js + evaluator + arbiter build pending" },
   { name: "Surge Scanner", phase: "killed" },
   { name: "BTC Scalp", phase: "killed" },

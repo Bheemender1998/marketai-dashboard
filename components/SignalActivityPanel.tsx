@@ -78,20 +78,20 @@ export function SignalActivityPanel({
             className="text-base cursor-help underline decoration-dotted decoration-muted-foreground/40"
             title={
               "Per-source signal-flow snapshot. EMITTED = signals sent to postmortem (resolved + pending + executed). " +
-              "EXECUTED = paper trades opened on Alpaca (counts toward Kraken go-live gate). " +
+              "LOGGED CLOSES = legacy paper-log records; incomplete accounting and not an independent cohort. " +
               "RESOLVED = signal-sim outcomes (notional stop/target hit; independent of paper-trade outcome). " +
               "PENDING (~) = postmortem signals awaiting resolution (proportionally allocated since pendingCount is not per-source today). " +
               "Killed sources (picks, btc_scalp_sim, surge) are filtered out per dashboard doctrine 2026-05-02."
             }
           >
-            Signal Activity (live sources)
+            Legacy signal activity estimates
           </CardTitle>
           <span className="text-xs text-muted-foreground font-mono">
             {loading ? "—" : `${rejections?.last24hCount ?? 0} blocked / 24h`}
           </span>
         </div>
         <p className="text-xs text-muted-foreground">
-          What&apos;s flowing through the live pipelines · lifetime totals (24h block counter is endpoint-aggregated, not per-source)
+          Diagnostic estimates only; these counts do not qualify performance or capital readiness.
         </p>
       </CardHeader>
       <CardContent>
@@ -106,8 +106,8 @@ export function SignalActivityPanel({
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-xs">Source</TableHead>
-                    <TableHead className="text-xs text-right">Emitted</TableHead>
-                    <TableHead className="text-xs text-right">Executed</TableHead>
+                    <TableHead className="text-xs text-right">Estimated activity</TableHead>
+                    <TableHead className="text-xs text-right">Logged closes</TableHead>
                     <TableHead className="text-xs text-right">Resolved (sim)</TableHead>
                     <TableHead className="text-xs text-right">Pending (~)</TableHead>
                   </TableRow>

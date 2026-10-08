@@ -16,6 +16,8 @@ import { TruthSourcesLegend } from "@/components/TruthSourcesLegend";
 import { SignalActivityPanel } from "@/components/SignalActivityPanel";
 import { KrakenStagedSimPanel } from "@/components/KrakenStagedSimPanel";
 import { verifiedAccounting } from "@/lib/accounting";
+import { verifiedCfReview } from "@/lib/cfReview";
+import { CfReviewPanel } from "@/components/CfReviewPanel";
 import type {
   PaperStats, PostmortemStats, Rejections, TradingStatus,
   EnrichedPositionsResponse, PaperMetrics,
@@ -40,6 +42,10 @@ export default function DashboardPage() {
   const { data: accountingData, error: accountingError, isLoading: accountingLoading } =
     useSWR<unknown>(`${BASE}/api/paper/accounting`, fetcher, { refreshInterval: REFRESH });
   const accounting = accountingError ? null : verifiedAccounting(accountingData);
+
+  const { data: cfReviewData, error: cfReviewError, isLoading: cfReviewLoading } =
+    useSWR<unknown>(`${BASE}/api/paper/cf-review`, fetcher, { refreshInterval: REFRESH });
+  const cfReview = cfReviewError ? null : verifiedCfReview(cfReviewData);
 
   const { data: postmortem, isLoading: pmLoading } =
     useSWR<PostmortemStats>(`${BASE}/api/postmortem/stats`, fetcher, { refreshInterval: REFRESH });
@@ -66,6 +72,7 @@ export default function DashboardPage() {
       <Header isOnline={isOnline} lastUpdated={lastUpdated} />
       <PerfPanel paper={paper} trading={trading} accounting={accounting} loading={paperLoading || tradingLoading} accountingLoading={accountingLoading} />
       <TruthSourcesLegend />
+      <CfReviewPanel review={cfReview} loading={cfReviewLoading} />
       <PFOnlyPanel accounting={accounting} loading={accountingLoading} />
       <FalsificationGates accounting={accounting} />
       <LiveMetricsPanel metrics={metrics} loading={metricsLoading} />

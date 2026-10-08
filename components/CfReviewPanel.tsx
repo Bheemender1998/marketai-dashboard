@@ -39,7 +39,7 @@ export function CfReviewPanel({ review, loading }: { review: CfReview | null; lo
               <div><dt className="text-muted-foreground">Completed sessions</dt><dd className="font-mono mt-1">{review.completed_trading_sessions}</dd></div>
             </dl>
             <p><strong>Net profit and return: unavailable.</strong> Entries and exits still need a validated paper-trading policy. The annual goal is aspirational.</p>
-            <p className="text-muted-foreground">Session coverage: {review.coverage.complete ?? 0} evaluated · {review.coverage.unimplemented ?? 0} awaiting an evaluator · {(review.coverage.missing ?? 0) + (review.coverage.incomplete ?? 0)} missing or incomplete.</p>
+            <p className="text-muted-foreground">Observed sessions awaiting evaluation: {review.coverage.unimplemented ?? 0} · missing intake sessions: {review.coverage.missing ?? 0}. Source gaps are listed below.</p>
             <div>
               <p className="font-medium">Next: {review.next_work.action === "INVESTIGATE_DATA" ? "Investigate data gaps" : "Complete and validate the paper evaluator"}</p>
               {review.next_work.blockers.length > 0 && <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">

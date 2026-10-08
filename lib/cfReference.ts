@@ -7,6 +7,31 @@ export interface CfPriceObservations {
   at_least_10pct_at_time_exit: number;
 }
 
+interface CfComparison {
+  diagnostic_paired_sessions: number;
+  qualifying_paired_sessions: number;
+  diagnostic_mean_selected_change_pct: number | null;
+  diagnostic_mean_difference_pp: number | null;
+  mean_selected_change_pct: number | null;
+  mean_difference_pp: number | null;
+  mean_selected_minus_iwm_pp: number | null;
+  minimum_difference_pp: number | null;
+  maximum_difference_pp: number | null;
+  next_action: "COLLECT_UNSEEN_SESSIONS" | "DESIGN_EXECUTION_STUDY" | "RESEARCH_ENTRY_TIMING";
+}
+
+interface CfCandidateResearch {
+  as_of: string;
+  session_date: string;
+  reviewed_checkpoints: number[];
+  qualifying_sessions: number;
+  comparisons: Record<"held_near_prior_high" | "already_up_5_to_10_pct", CfComparison>;
+  candidate_research_executor_implemented: true;
+  automatic_entry_rule_changes: false;
+  statistical_validation_complete: false;
+  promotion_enabled: false;
+}
+
 export interface CfReference {
   available: true;
   kind: "cf_same_day_reference_v1";
@@ -25,6 +50,7 @@ export interface CfReference {
   price_observations: Record<"multi" | "single" | "benchmark", CfPriceObservations> | null;
   observation_session_date: string | null;
   current_session_observed: boolean;
+  candidate_research: CfCandidateResearch | null;
   blockers: string[];
   evaluator_implemented: true;
   entry_rule_validated: false;
@@ -81,5 +107,46 @@ export function verifiedCfReference(value: unknown, now = Date.now()): CfReferen
         d.price_observations.multi.total+d.price_observations.single.total > d.retained_candidates) return null;
   }
   if (!d.current_session_observed && (complete || !(d.coverage.missing > 0))) return null;
+  return { ...d, candidate_research: verifiedCandidateResearch(d.candidate_research,d,now) };
+}
+
+function verifiedCandidateResearch(value: unknown, reference: CfReference, now: number): CfCandidateResearch | null {
+  if (!value || typeof value !== "object") return null;
+  const d = value as CfCandidateResearch;
+  const count = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
+  const recorded = typeof d.as_of === "string" ? Date.parse(d.as_of) : NaN;
+  if (!Number.isFinite(recorded) || recorded > now || recorded < Date.parse(reference.as_of) ||
+      d.session_date !== reference.session_date || !count(d.qualifying_sessions) ||
+      d.qualifying_sessions > reference.completed_trading_sessions ||
+      (d.session_date < "2026-10-09" && d.qualifying_sessions !== 0) ||
+      d.candidate_research_executor_implemented !== true || d.automatic_entry_rule_changes !== false ||
+      d.statistical_validation_complete !== false || d.promotion_enabled !== false ||
+      !d.comparisons || Object.keys(d.comparisons).sort().join(",") !== "already_up_5_to_10_pct,held_near_prior_high") return null;
+  const first = [1,2,4,5,7,10,15,20,30].filter(n => n <= reference.completed_trading_sessions);
+  if (!Array.isArray(d.reviewed_checkpoints) ||
+      d.reviewed_checkpoints.length !== first.length+Math.max(0,Math.floor(reference.completed_trading_sessions/30)-1) ||
+      d.reviewed_checkpoints.some((n,i) => n !== (i < first.length ? first[i] : (i-first.length+2)*30))) return null;
+  for (const g of Object.values(d.comparisons)) {
+    if (!g || !count(g.diagnostic_paired_sessions) || !count(g.qualifying_paired_sessions) ||
+        g.diagnostic_paired_sessions > reference.completed_trading_sessions ||
+        g.qualifying_paired_sessions > Math.min(g.diagnostic_paired_sessions,d.qualifying_sessions)) return null;
+    const diagnostic = [g.diagnostic_mean_selected_change_pct,g.diagnostic_mean_difference_pp];
+    const qualified = [g.mean_selected_change_pct,g.mean_difference_pp,g.mean_selected_minus_iwm_pp,
+      g.minimum_difference_pp,g.maximum_difference_pp];
+    if ((g.diagnostic_paired_sessions === 0 ? diagnostic.some(n => n !== null) : diagnostic.some(n => !Number.isFinite(n))) ||
+        (g.qualifying_paired_sessions === 0 ? qualified.some(n => n !== null) : qualified.some(n => !Number.isFinite(n)))) return null;
+    if (g.diagnostic_paired_sessions === g.qualifying_paired_sessions &&
+        (g.diagnostic_mean_selected_change_pct !== g.mean_selected_change_pct || g.diagnostic_mean_difference_pp !== g.mean_difference_pp)) return null;
+    if ((g.diagnostic_paired_sessions && (g.diagnostic_mean_selected_change_pct! < -100.5 ||
+          g.diagnostic_mean_selected_change_pct!-g.diagnostic_mean_difference_pp! < -100.5)) ||
+        (g.qualifying_paired_sessions && (g.mean_selected_change_pct! < -100.5 ||
+          g.mean_selected_change_pct!-g.mean_difference_pp! < -100.5 ||
+          g.mean_selected_change_pct!-g.mean_selected_minus_iwm_pp! < -100.5 ||
+          g.minimum_difference_pp! > g.mean_difference_pp! || g.maximum_difference_pp! < g.mean_difference_pp!))) return null;
+    const action = g.qualifying_paired_sessions < 20 ? "COLLECT_UNSEEN_SESSIONS" :
+      g.mean_selected_change_pct! > 0 && g.mean_difference_pp! > 0 && g.mean_selected_minus_iwm_pp! > 0 ?
+        "DESIGN_EXECUTION_STUDY" : "RESEARCH_ENTRY_TIMING";
+    if (g.next_action !== action) return null;
+  }
   return d;
 }

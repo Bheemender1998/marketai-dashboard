@@ -26,11 +26,14 @@ const blockers: Record<string, string> = {
 
 const pct = (value: number | null) => value === null ? "Unavailable" : `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 const dollars = (value: number) => value.toLocaleString("en-US", { style: "currency", currency: "USD" });
+const difference = (value: number | null) => value === null ? "Unavailable" : `${value > 0 ? "+" : ""}${value.toFixed(2)} pp`;
+const researchActions = { COLLECT_UNSEEN_SESSIONS: "Collect future sessions", DESIGN_EXECUTION_STUDY: "Design an execution study", RESEARCH_ENTRY_TIMING: "Research entry timing" };
 
 export function CfReviewPanel({ review, reference, loading }: {
   review: CfReview | null; reference: CfReference | null; loading: boolean;
 }) {
   const reasons = reference?.blockers ?? review?.next_work.blockers ?? [];
+  const research = reference?.candidate_research;
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -82,13 +85,34 @@ export function CfReviewPanel({ review, reference, loading }: {
                 <p className="text-xs text-muted-foreground">Observed from 5 minutes after open to 5 minutes before close. Means include quoted spread plus a 0.50% round-trip cost allowance; the 5%/10% counts include spread only. Rejected candidates are included. These are endpoint changes, not intraday highs or earned portfolio returns.</p>
               </div>
             </> : <p role="status" className="text-muted-foreground">Reference results are unavailable. The last saved review has {review?.coverage.unimplemented ?? 0} sessions awaiting evaluation and {review?.coverage.missing ?? 0} missing intake sessions.</p>}
+            {research ? <div className="border-t pt-4 space-y-2">
+              <h3 className="font-medium">Candidate research</h3>
+              <p className="text-muted-foreground">Research through {research.session_date} · recorded {new Date(research.as_of).toLocaleString()}. Qualifying sessions: {research.qualifying_sessions}.</p>
+              <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+                <caption className="sr-only">Fixed candidate comparisons, separating descriptive observations from qualifying future evidence</caption>
+                <thead className="text-muted-foreground"><tr className="border-b">
+                  <th scope="col" className="py-2 pr-4 font-normal">Comparison within multi-screen candidates</th>
+                  <th scope="col" className="py-2 pr-4 font-normal">All observed paired sessions</th>
+                  <th scope="col" className="py-2 font-normal">Qualifying future pairs</th>
+                </tr></thead>
+                <tbody>{(["held_near_prior_high", "already_up_5_to_10_pct"] as const).map(key => {
+                  const g = research.comparisons[key];
+                  return <tr key={key} className="border-b last:border-0 align-top">
+                    <th scope="row" className="py-2 pr-4 font-medium">{key === "held_near_prior_high" ? "Prior close within 5% of the day's high" : "Already up 5–10% over the prior two sessions"}<p className="text-xs text-muted-foreground font-normal mt-1">Next: {researchActions[g.next_action]}</p></th>
+                    <td className="py-2 pr-4"><p>{g.diagnostic_paired_sessions} paired</p><p>Mean: <span className="font-mono">{pct(g.diagnostic_mean_selected_change_pct)}</span></p><p className="text-xs text-muted-foreground">vs remaining multi: {difference(g.diagnostic_mean_difference_pp)}</p></td>
+                    <td className="py-2"><p>{g.qualifying_paired_sessions} paired</p><p>Mean: <span className="font-mono">{pct(g.mean_selected_change_pct)}</span></p><p className="text-xs text-muted-foreground">vs remaining multi: {difference(g.mean_difference_pp)}</p></td>
+                  </tr>;
+                })}</tbody>
+              </table></div>
+              <p className="text-xs text-muted-foreground">Both groups need observations for a paired session. Means use the same quote spread and cost allowance above, with each session weighted equally. Future evidence starts October 9 and requires complete source coverage and rules frozen before open. Twenty qualifying pairs only permit a design review; they do not establish a statistical edge or change entry rules.</p>
+            </div> : reference && <p role="status" className="text-muted-foreground">Candidate research has not been verified for this reference result. Historical observations remain available above.</p>}
             <div>
               <p className="font-medium">Next: {reasons.length ? "Investigate data gaps and collect the next session" : "Observe the frozen rule on future sessions"}</p>
               {reasons.length > 0 && <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
                 {reasons.map(reason => <li key={reason}>{blockers[reason] ?? "Source evidence needs further review."}</li>)}
               </ul>}
             </div>
-            <p className="text-muted-foreground">{review ? `Reviewed checkpoints: ${review.reviewed_checkpoints.join(", ") || "none"} (review through ${review.session_date}).` : "Review history is unavailable."} Reviews follow completed trading sessions 1, 2, 4, 5, 7, 10, 15, 20, 30, then every 30. Automatic hypothesis testing and rule promotion remain pending.</p>
+            <p className="text-muted-foreground">{research ? `Research checkpoints reviewed: ${research.reviewed_checkpoints.join(", ") || "none"}.` : review ? `Source-only checkpoints reviewed: ${review.reviewed_checkpoints.join(", ") || "none"} (through ${review.session_date}).` : "Review history is unavailable."} Reviews follow completed trading sessions 1, 2, 4, 5, 7, 10, 15, 20, 30, then every 30. {research ? "Fixed comparisons run after reference evaluation. Entry rules stay unchanged; promotion is disabled." : "Candidate research execution has not been verified for this result; promotion is disabled."}</p>
           </>
         )}
         <p className="text-xs text-muted-foreground">Dedicated same-day paper study; separate from existing PF broker results. Every modeled position must close that session. Capital and previous results carry forward when rules change.</p>

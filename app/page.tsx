@@ -17,6 +17,7 @@ import { SignalActivityPanel } from "@/components/SignalActivityPanel";
 import { KrakenStagedSimPanel } from "@/components/KrakenStagedSimPanel";
 import { verifiedAccounting } from "@/lib/accounting";
 import { verifiedCfReview } from "@/lib/cfReview";
+import { verifiedCfReference } from "@/lib/cfReference";
 import { CfReviewPanel } from "@/components/CfReviewPanel";
 import type {
   PaperStats, PostmortemStats, Rejections, TradingStatus,
@@ -47,6 +48,10 @@ export default function DashboardPage() {
     useSWR<unknown>(`${BASE}/api/paper/cf-review`, fetcher, { refreshInterval: REFRESH });
   const cfReview = cfReviewError ? null : verifiedCfReview(cfReviewData);
 
+  const { data: cfReferenceData, error: cfReferenceError, isLoading: cfReferenceLoading } =
+    useSWR<unknown>(`${BASE}/api/paper/cf-reference`, fetcher, { refreshInterval: REFRESH });
+  const cfReference = cfReferenceError ? null : verifiedCfReference(cfReferenceData);
+
   const { data: postmortem, isLoading: pmLoading } =
     useSWR<PostmortemStats>(`${BASE}/api/postmortem/stats`, fetcher, { refreshInterval: REFRESH });
 
@@ -72,7 +77,7 @@ export default function DashboardPage() {
       <Header isOnline={isOnline} lastUpdated={lastUpdated} />
       <PerfPanel paper={paper} trading={trading} accounting={accounting} loading={paperLoading || tradingLoading} accountingLoading={accountingLoading} />
       <TruthSourcesLegend />
-      <CfReviewPanel review={cfReview} loading={cfReviewLoading} />
+      <CfReviewPanel review={cfReview} reference={cfReference} loading={cfReviewLoading && cfReferenceLoading} />
       <PFOnlyPanel accounting={accounting} loading={accountingLoading} />
       <FalsificationGates accounting={accounting} />
       <LiveMetricsPanel metrics={metrics} loading={metricsLoading} />
